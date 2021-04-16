@@ -17,6 +17,8 @@ public class ReadCsvFromFile
         obj.countOfElements("D:\\Test_Final_Grade.csv");
         System.out.println("________________");
         obj.finalGrade("D:\\Test_Final_Grade.csv");
+        System.out.println("________________");
+        obj.finalGradeToArrayList("D:\\Test_Final_Grade.csv");
     }
 
     //СЧИТАЕМ КОЛИЧЕСТВО СТРОК В CSV С ОЦЕНКАМИ
@@ -54,8 +56,6 @@ public class ReadCsvFromFile
     {
         // для группировки найденных цифр и парсинга каждой группы в число
         StringBuilder sb = new StringBuilder();
-        // для вывода строки-списка найденных чисел
-        //StringBuilder sbout = new StringBuilder();
 
         int i = 0;
         int sum = 0;
@@ -85,17 +85,6 @@ public class ReadCsvFromFile
                 // если текущий символ - это не_цифра,просто переходим к следующему
                 i++;
         }
-
-        //if (sbout.length() == 0) {
-            // если список найденных чисел пуст
-            //System.out.println("Чисел в тексте не найдено");
-        //} else {
-            //System.out.println("Найденные в тексте числа: ");
-            // удаление лишних запятой и пробела, добавленных в конце списка
-            //System.out.println(sbout.delete(sbout.length() - 2,
-                    //sbout.length() - 1));
-            //System.out.println("Сумма чисел в заданном тексте = " + sum);
-        //}
         return sum;
     }
     public ArrayList finalGrade(String filepath)
@@ -126,6 +115,43 @@ public class ReadCsvFromFile
         System.out.println(arrayList.toString());
         return arrayList;
     }
+
+    public ArrayList finalGradeToArrayList(String filepath)
+    {
+        String line = "";
+        ArrayList<String> arrayList = new ArrayList<String>();
+        try(BufferedReader br = new BufferedReader(new FileReader(filepath))) {
+            //Используем для пропуска первой строки
+            line = br.readLine();
+            int i = 4;
+            while ((line = br.readLine()) != null)
+            {
+                String[] var = line.split(",");
+
+                String strings = "";
+                for(i=4; i<countOfElements(filepath);i++)
+                {
+                    strings = strings + var[i];
+                }
+                float finalGrade = (float) digitsToArray(strings)/(countOfElements(filepath) - 3)/3;
+                //Записываем как отдельные элементы массива
+                //Имя   --  Фамилия --  Итоговая оценка
+                arrayList.add(var[0]);
+                arrayList.add(var[1]);
+                arrayList.add(finalGrade + "");
+            }
+
+        } catch (IOException e) { e.printStackTrace(); }
+        System.out.println(arrayList.toString());
+        return arrayList;
+    }
+
+
+
+
+
+
+
     //ЧИТАЕМ CSV ФАЙЛ
     public void toReadFullFile(String filepath)
     {
