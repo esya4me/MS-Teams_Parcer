@@ -1,4 +1,5 @@
 package sample;
+
 import javafx.beans.property.SimpleStringProperty;
 import java.util.ArrayList;
 
@@ -13,11 +14,11 @@ public class FinalGrade {
         this.finalGrade = new SimpleStringProperty(finalGrade);
     }
     FinalGrade(){ }
+
     public String getName() {
         return name.get();
     }
     public String getLastName() {
-
         return lastName.get();
     }
     public String getFinalGrade() {
