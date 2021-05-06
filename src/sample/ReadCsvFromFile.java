@@ -8,11 +8,12 @@ import java.util.Arrays;
 public class ReadCsvFromFile
 {
     private String line;
-    private final ArrayList<String> lastName = new ArrayList<>();
+    private final ArrayList<String> fullName = new ArrayList<>();
     private final ArrayList<String> action = new ArrayList<>();
     private final ArrayList<String> timeOfAction = new ArrayList<>();
 
     private final ArrayList<String> listOfEndTime = new ArrayList<>();
+    private final ArrayList<String> listOfAttendance = new ArrayList<>();
     private final StringBuilder sb = new StringBuilder();
 
     /**
@@ -198,8 +199,7 @@ public class ReadCsvFromFile
      * @throws IOException - отлавливаем ошибки во время операции ввода-вывода
      */
     //ПЕРЕПИСАТЬ АДЕКВАТНО МЕТОД
-    public void toReadFullFileTest(String filepath) throws IOException {
-        ReadCsvFromFile attendance = new ReadCsvFromFile();
+    public ArrayList<String> toReadFullFileTest(String filepath) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filepath), StandardCharsets.UTF_16));
         //Используем для пропуска первой строки
         line = br.readLine();
@@ -212,7 +212,7 @@ public class ReadCsvFromFile
             String str = var[2];
             strings[i] = str.replaceAll(".*[,]\\s","");
 
-            lastName.add(var[0]);
+            fullName.add(var[0]);
             action.add(var[1]);
             timeOfAction.add(strings[i]);
 
@@ -223,44 +223,44 @@ public class ReadCsvFromFile
         }
         String nearTimeToEnd = toGetNearTime(timeOfAction);
 
-        for(i = 0; i < lastName.size();i++) {
-            for(int j = i + 1; j < lastName.size();j++) {
+        for(i = 0; i < fullName.size(); i++) {
+            for(int j = i + 1; j < fullName.size(); j++) {
                 if(action.get(i).equals("Присоединился") && action.get(j).equals("Ушел")) {
                     int sec1 = toGetSecondsFromString(timeOfAction.get(i));
                     int sec2 = toGetSecondsFromString(timeOfAction.get(j));
                     int time = sec2 - sec1;
                     String timeStr = toGetStringFromSeconds(time);
 
-                    lastName.remove(j);
+                    fullName.remove(j);
                     action.remove(j);
                     timeOfAction.remove(j);
 
                     timeOfAction.set(i , timeStr);
                     break;
                 }
-                if(!lastName.get(i).equals(lastName.get(j))) {
+                if(!fullName.get(i).equals(fullName.get(j))) {
                     String diff = toGetStringFromSeconds(toGetSecondsFromString(nearTimeToEnd) - toGetSecondsFromString(timeOfAction.get(i)));
                     timeOfAction.set(i, diff);
                     break;
                 }
             }
-            if (lastName.get(i).equals(lastName.get(lastName.size()-1))) {
+            if (fullName.get(i).equals(fullName.get(fullName.size()-1))) {
                 String diff = toGetStringFromSeconds(toGetSecondsFromString(nearTimeToEnd) - toGetSecondsFromString(timeOfAction.get(i)));
                 timeOfAction.set(i, diff);
                 break;
             }
             //System.out.println( lastName.get(i) + "\t" + action.get(i) + "\t" + timeOfAction.get(i));
         }
-        for (i = 0; i < lastName.size();i++) {
-            for(int j = i + 1; j < lastName.size();j++) {
-                if (lastName.get(i).equals(lastName.get(j))) {
+        for (i = 0; i < fullName.size(); i++) {
+            for(int j = i + 1; j < fullName.size(); j++) {
+                if (fullName.get(i).equals(fullName.get(j))) {
                     if (action.get(i).equals("Присоединился") && action.get(j).equals("Присоединился")) {
                         int sec11 = toGetSecondsFromString(timeOfAction.get(i));
                         int sec22 = toGetSecondsFromString(timeOfAction.get(j));
                         int time = sec22 + sec11;
                         String timeStr = toGetStringFromSeconds(time);
 
-                        lastName.remove(j);
+                        fullName.remove(j);
                         action.remove(j);
                         timeOfAction.remove(j);
 
@@ -269,9 +269,16 @@ public class ReadCsvFromFile
                     }
                 }
             }
-            System.out.println( lastName.get(i) + "\t" + action.get(i) + "\t" + timeOfAction.get(i));
+            System.out.println( fullName.get(i) + "\t" + action.get(i) + "\t" + timeOfAction.get(i));
+
+            //Соединяем три ArrayList'a в один
+            for (i = 0; i < fullName.size(); i++) {
+                listOfAttendance.add(fullName.get(i));
+                listOfAttendance.add(action.get(i));
+                listOfAttendance.add(timeOfAction.get(i));
+            }
         }
-        return;
+        return listOfAttendance;
     }
 
     //ВЫДЕЛЯЕМ С CSV СПИСОК E-MAIL'ОВ ДЛЯ ОТПРАВКИ ПИСЕМ
@@ -298,8 +305,6 @@ public class ReadCsvFromFile
 
     public static void main(String[] args) throws IOException {
         ReadCsvFromFile readCsvFromFile = new ReadCsvFromFile();
-        readCsvFromFile.toReadFullFileTest("D:/UTC-151 06.04.21.csv");
-        System.out.println(readCsvFromFile.toGetSecondsFromString("12:01:03"));
-        System.out.println(readCsvFromFile.toGetStringFromSeconds(1232));
+        readCsvFromFile.toReadFullFileTest("D:/UVA 15.03.csv");
     }
 }

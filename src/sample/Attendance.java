@@ -38,8 +38,18 @@ public class Attendance {
                 attendanceList.add(list);
             }
         }
+        for(int i = 0; i < attendanceList.size(); i++) {
+            //Сравниваем i-й элемент с j-ми в цикле
+            for(int j = i + 1; j < attendanceList.size(); j++) {
+                //Если i-й эквивалентен j-му
+                if(attendanceList.get(i).equals(attendanceList.get(j))) {
+                    //Удаляем объект из списка
+                    attendanceList.remove(j);
+                    j--;
+                }
+            }
+        }
 
-        
         return attendanceList;
     }
 }
