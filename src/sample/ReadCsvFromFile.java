@@ -216,10 +216,10 @@ public class ReadCsvFromFile
             action.add(var[1]);
             timeOfAction.add(strings[i]);
 
-            System.out.println("Фамилия: " + var[0] +
-                    " Действие: " + var[1] +
-                    " Время выполнения действия: " + strings[i]
-            );
+            //System.out.println("Фамилия: " + var[0] +
+            //        " Действие: " + var[1] +
+            //        " Время выполнения действия: " + strings[i]
+            //);
         }
         String nearTimeToEnd = toGetNearTime(timeOfAction);
 
@@ -269,12 +269,11 @@ public class ReadCsvFromFile
                     }
                 }
             }
-            System.out.println( fullName.get(i) + "\t" + action.get(i) + "\t" + timeOfAction.get(i));
+            //System.out.println( fullName.get(i) + "\t" + action.get(i) + "\t" + timeOfAction.get(i));
 
-            //Соединяем три ArrayList'a в один
+            ////Соединяем три ArrayList'a в один
             for (i = 0; i < fullName.size(); i++) {
                 listOfAttendance.add(fullName.get(i));
-                listOfAttendance.add(action.get(i));
                 listOfAttendance.add(timeOfAction.get(i));
             }
         }
