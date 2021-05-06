@@ -15,6 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 
 
@@ -27,17 +28,24 @@ public class Main extends Application {
     private final Button toSendEmailsButton = new Button("Отправить уведомления на E-mail");
     private final Button menuButton = new Button("НАЖМИТЕ ДЛЯ ВЫХОДА В МЕНЮ");
 
-    //Получаем список расширений (.csv)
+    /**
+     * Функция получения списка расширений (.csv)
+     */
     private void setExtensionFilter() {
         FileChooser.ExtensionFilter extFilter = new
-                FileChooser.ExtensionFilter("CSV Files", "*.csv");
+                FileChooser.ExtensionFilter("CSV Files" , "*.csv");
         fileChooser.getExtensionFilters().add(extFilter);
     }
 
-    //Функция возвращает объект BorderPane и работает для любого узла Scene
-    //Другими словами, мы можем отображать кнопку menuButton с любыми узлами сцены,
-    //TableView, BorderPane, FlowPane и т.д., соответственно метод - универсален
-    private BorderPane toGetMenuButton(Node object){
+    /**
+     * Функция создания кнопки для выхода в меню (Работает с любым узлом Scene)
+     * @param object - принимает любой объект типа Node
+     *               например, TableView, BorderPane, FlowPane
+     *               соответственно - метод универсален
+     * @return - возвращает объект типа BorderPain, находящийся справа внизу
+     *          кнопка - (НАЖМИТЕ ДЛЯ ВЫХОДА В МЕНЮ)
+     */
+    private BorderPane toGetMenuButton(Node object) {
         //BorderPane для всех функций
         BorderPane root = new BorderPane();
         BorderPane bottomBorder = new BorderPane();
@@ -51,8 +59,14 @@ public class Main extends Application {
         return root;
     }
 
-    //Функция возвращает сцену главного меню
+    /**
+     * Функция получения сцены главного меню
+     * @return - возвращает объект Scene
+     *          (совокупность всех объектов на одном)
+     */
     private Scene toGetMenuScene() {
+        //Добавляем кнопки toGetFinalGradeButton, toGetAttendanceButton, toSendEmailsButton
+        //и задаем всем размер с шириной = 300 и высотой = 50
         for (Button button : Arrays.asList(toGetFinalGradeButton, toGetAttendanceButton, toSendEmailsButton)) {
             button.setPrefSize(300,50);
         }
@@ -85,19 +99,36 @@ public class Main extends Application {
     }
 
     /**
-     * Функция выдает предупреждение о том, что файл выбран на русском языке
+     * Функция выдает предупреждение о том, что выбран неподходящий файл
+     * Например, вы выбрали файл с посещениями вместо файла с оценками
+     *  Исключение возникает тогда, когда мы пытаемся обратиться к элементу массива
+     *  по отрицательному или превышающему размер массива индексу.
      */
     private void toShowAlertMessageArrayIndexOutOfBoundsException() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Выбор файла");
-        alert.setHeaderText("Файл должен носить английское название!");
+        alert.setHeaderText("Выбран неподходящий файл!");
         alert.showAndWait();
     }
 
-    //Функция добавляет столбец к таблице table
+    /**
+     * Функция добавляет столбец к таблице TableView<FinalGrade>
+     * @param table - таблица, к которой будет добавлен столбец
+     * @param columnName - имя столбца
+     * @param nameOfProperty - имя свойства, по которому будет выбран столбец
+     */
     private void toSetTableColumnFinalGrade(TableView<FinalGrade> table, String columnName, String nameOfProperty) {
         //Создаем столбец, в который будем записывать
         TableColumn<FinalGrade, String> nameOfColumn = new TableColumn<>(columnName);
+        //Определяем фабрику для столбца с привязкой к свойству
+        nameOfColumn.setCellValueFactory(new PropertyValueFactory<>(nameOfProperty));
+        //Добавляем столбец в таблицу
+        table.getColumns().add(nameOfColumn);
+    }
+
+    private void toSetTableColumnAttendance(TableView<Attendance> table, String columnName, String nameOfProperty) {
+        //Создаем столбец, в который будем записывать
+        TableColumn<Attendance, String> nameOfColumn = new TableColumn<>(columnName);
         //Определяем фабрику для столбца с привязкой к свойству
         nameOfColumn.setCellValueFactory(new PropertyValueFactory<>(nameOfProperty));
         //Добавляем столбец в таблицу
@@ -158,7 +189,40 @@ public class Main extends Application {
 
         //Логика кнопки toGetAttendanceButton
         toGetAttendanceButton.setOnAction(event -> {
-            //TODO
+            try {
+                setExtensionFilter();
+                File file = fileChooser.showOpenDialog(null);
+                String selectedFile = file.getPath();
+                Attendance attendance = new Attendance();
+
+
+                ObservableList<Attendance> listOfAttendance = FXCollections.observableArrayList(
+                        attendance.getArrayOfAttendance(readCsvFromFile.toReadFullFileTest(selectedFile))
+                );
+                TableView<Attendance> attendanceTable = new TableView<>(listOfAttendance);
+                attendanceTable.setPrefWidth(450);
+                attendanceTable.setPrefHeight(400);
+
+                toSetTableColumnAttendance(attendanceTable , "Полное имя" , "fullName");
+                toSetTableColumnAttendance(attendanceTable , "Время присутствия" , "timeOfAction");
+
+                Scene scene1 = new Scene(toGetMenuButton(attendanceTable) , 960 , 600);
+                primaryStage.setScene(scene1);
+                primaryStage.show();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            //Отлавливаем ошибки, когда пользователь не выбрал файл
+            catch (NullPointerException e){
+                    //Выдаем предупреждение из метода:
+                    toShowAlertMessageNullPointerException();
+                }
+                //Отлавливаем ошибки, связанные с неправильным файлом
+            catch (IndexOutOfBoundsException e){
+                    //Выдаем предупреждение из метода:
+                    toShowAlertMessageArrayIndexOutOfBoundsException();
+                }
         });
 
         //Логика кнопки toSendEmailsButton
