@@ -1,4 +1,3 @@
-
 package sample;
 
 import javafx.application.Application;
@@ -14,16 +13,13 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
-
 
 public class Main extends Application {
     private final FileChooser fileChooser = new FileChooser();
-    private final ReadCsvFromFile readCsvFromFile = new ReadCsvFromFile();
-    private final Button toGetFinalGradeButton =
-            new Button("Рассчитать итоговую оценку");
+    private final Button toGetFinalGradeButton = new Button("Рассчитать итоговую оценку");
     private final Button toGetAttendanceButton = new Button("Получить список присутствующих");
     private final Button toSendEmailsButton = new Button("Отправить уведомления на E-mail");
     private final Button menuButton = new Button("НАЖМИТЕ ДЛЯ ВЫХОДА В МЕНЮ");
@@ -45,15 +41,19 @@ public class Main extends Application {
      * @return - возвращает объект типа BorderPain, находящийся справа внизу
      *          кнопка - (НАЖМИТЕ ДЛЯ ВЫХОДА В МЕНЮ)
      */
-    private BorderPane toGetMenuButton(Node object) {
+    private BorderPane toGetMenuButton(Node object, String time) {
+        Label label = new Label(time);
+        label.setPadding(new Insets(5));
         //BorderPane для всех функций
         BorderPane root = new BorderPane();
         BorderPane bottomBorder = new BorderPane();
         root.setCenter(object);
+
         //Задаем кнопке menuButton правое расположение в объекте bottomBorder
         bottomBorder.setRight(menuButton);
+        HBox hBox = new HBox(bottomBorder, label);
         //Задаем bottomBorder расположение по низу в объекте root
-        root.setBottom(bottomBorder);
+        root.setBottom(hBox);
         //место между элементами и окном borderpane
         root.setPadding(new Insets(20));
         return root;
@@ -98,13 +98,19 @@ public class Main extends Application {
         alert.showAndWait();
     }
 
+    private void toChangeTextOnLabel(Label nameOfLabel) {
+        nameOfLabel.setPadding(new Insets(10,0,0,20));
+        nameOfLabel.setStyle("-fx-font-weight: bold");
+        nameOfLabel.setStyle("-fx-font-size: 1.5em");
+    }
+
     /**
      * Функция выдает предупреждение о том, что выбран неподходящий файл
      * Например, вы выбрали файл с посещениями вместо файла с оценками
      *  Исключение возникает тогда, когда мы пытаемся обратиться к элементу массива
      *  по отрицательному или превышающему размер массива индексу.
      */
-    private void toShowAlertMessageArrayIndexOutOfBoundsException() {
+    private void toShowAlertMessageIndexException() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Выбор файла");
         alert.setHeaderText("Выбран неподходящий файл!");
@@ -143,6 +149,7 @@ public class Main extends Application {
         //Логика кнопки menuButton
         menuButton.setOnAction(event -> {
             primaryStage.setScene(toGetMenuScene());
+            primaryStage.setTitle("Application For MS Teams");
             primaryStage.show();
         } );
 
@@ -157,7 +164,10 @@ public class Main extends Application {
 
                 String selectedFile = file.getPath();
 
+                //Начало выполнения программы
+                long time = System.nanoTime();
                 FinalGrade grade = new FinalGrade();
+                ReadCsvFromFile readCsvFromFile = new ReadCsvFromFile();
 
                 ObservableList<FinalGrade> listOfGrades = FXCollections.observableArrayList(
                         grade.getArrayOfFinalGrades(readCsvFromFile.finalGradeToArrayList(selectedFile))
@@ -171,7 +181,17 @@ public class Main extends Application {
                 toSetTableColumnFinalGrade(table,"Фамилия","lastName");
                 toSetTableColumnFinalGrade(table,"Итоговая оценка","finalGrade");
 
-                Scene scene1 = new Scene(toGetMenuButton(table), 960, 600);
+                //Конец выполнения программы
+                double timeD = (System.nanoTime() - time)/1_000_000.;
+                String timeStr = String.format("Время выполнения: " + "%.3f",timeD) + " ms (" +
+                                    String.format("%.6f", timeD/1_000.) + " s)";
+
+                Label nameOfFile = new Label("Выбран файл: " + file.getName());
+                //Изменяем текст с помощью функции
+                toChangeTextOnLabel(nameOfFile);
+
+                VBox sceneBox = new VBox(nameOfFile,toGetMenuButton(table, timeStr));
+                Scene scene1 = new Scene(sceneBox , 960 , 600);
                 primaryStage.setScene(scene1);
                 primaryStage.show();
             }
@@ -183,7 +203,7 @@ public class Main extends Application {
             //Отлавливаем ошибки, связанные с русским названием файла
             catch (ArrayIndexOutOfBoundsException e){
                 //Выдаем предупреждение из метода:
-                toShowAlertMessageArrayIndexOutOfBoundsException();
+                toShowAlertMessageIndexException();
             }
         });
 
@@ -193,8 +213,11 @@ public class Main extends Application {
                 setExtensionFilter();
                 File file = fileChooser.showOpenDialog(null);
                 String selectedFile = file.getPath();
-                Attendance attendance = new Attendance();
 
+                //Начало выполнения программы
+                long time = System.nanoTime();
+                Attendance attendance = new Attendance();
+                ReadCsvFromFile readCsvFromFile = new ReadCsvFromFile();
 
                 ObservableList<Attendance> listOfAttendance = FXCollections.observableArrayList(
                         attendance.getArrayOfAttendance(readCsvFromFile.toReadFullFileTest(selectedFile))
@@ -205,13 +228,21 @@ public class Main extends Application {
 
                 toSetTableColumnAttendance(attendanceTable , "Полное имя" , "fullName");
                 toSetTableColumnAttendance(attendanceTable , "Время присутствия" , "timeOfAction");
+                toSetTableColumnAttendance(attendanceTable , "Посещение" , "attendance");
 
-                Scene scene1 = new Scene(toGetMenuButton(attendanceTable) , 960 , 600);
+                //Конец выполнения программы
+                double timeD = (System.nanoTime() - time)/1_000_000;
+                String timeStr = String.format("Время выполнения: " + "%.3f",timeD) + " ms (" +
+                        String.format("%.6f", timeD/1_000) + " s)";
+
+                Label nameOfFile = new Label("Выбран файл: " + file.getName());
+                //Изменяем текст с помощью функции
+                toChangeTextOnLabel(nameOfFile);
+
+                VBox sceneBox = new VBox(nameOfFile,toGetMenuButton(attendanceTable, timeStr));
+                Scene scene1 = new Scene(sceneBox , 960 , 600);
                 primaryStage.setScene(scene1);
                 primaryStage.show();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
             }
             //Отлавливаем ошибки, когда пользователь не выбрал файл
             catch (NullPointerException e){
@@ -221,7 +252,7 @@ public class Main extends Application {
                 //Отлавливаем ошибки, связанные с неправильным файлом
             catch (IndexOutOfBoundsException e){
                     //Выдаем предупреждение из метода:
-                    toShowAlertMessageArrayIndexOutOfBoundsException();
+                    toShowAlertMessageIndexException();
                 }
         });
 

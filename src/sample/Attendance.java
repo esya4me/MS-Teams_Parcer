@@ -1,33 +1,55 @@
 package sample;
 
 import javafx.beans.property.SimpleStringProperty;
-
 import java.util.ArrayList;
 
 public class Attendance {
     private SimpleStringProperty fullName;
     private SimpleStringProperty timeOfAction;
+    private SimpleStringProperty attendance;
 
-    Attendance(String fullName, String timeOfAction) {
+    Attendance(String fullName, String timeOfAction, String attendance) {
         this.fullName = new SimpleStringProperty(fullName);
         this.timeOfAction = new SimpleStringProperty(timeOfAction);
+        this.attendance = new SimpleStringProperty(attendance);
     }
 
     Attendance() {}
 
-    public String getFullName() {
-        return fullName.get();
+
+    public SimpleStringProperty fullNameProperty() {
+        return fullName;
     }
 
-    public String getTimeOfAction() {
-        return timeOfAction.get();
+    public void setFullName(String fullName) {
+        this.fullName.set(fullName);
+    }
+
+    public SimpleStringProperty timeOfActionProperty() {
+        return timeOfAction;
+    }
+
+    public void setTimeOfAction(String timeOfAction) {
+        this.timeOfAction.set(timeOfAction);
+    }
+
+    public String getAttendance() {
+        return attendance.get();
+    }
+
+    public SimpleStringProperty attendanceProperty() {
+        return attendance;
+    }
+
+    public void setAttendance(String attendance) {
+        this.attendance.set(attendance);
     }
 
     public ArrayList<Attendance> getArrayOfAttendance(ArrayList<String> listOfAttendance) {
         ArrayList<Attendance> attendanceList = new ArrayList<>();
 
-        for (int i = 0; i < listOfAttendance.size(); i = i + 2) {
-            Attendance list = new Attendance(listOfAttendance.get(i), listOfAttendance.get(i+1));
+        for (int i = 0; i < listOfAttendance.size(); i = i + 3) {
+            Attendance list = new Attendance(listOfAttendance.get(i), listOfAttendance.get(i+1), listOfAttendance.get(i+2));
             for (int j = 0; j <= i; j++) {
                 attendanceList.add(list);
             }

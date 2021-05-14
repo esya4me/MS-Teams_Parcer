@@ -11,6 +11,7 @@ public class ReadCsvFromFile
     private final ArrayList<String> fullName = new ArrayList<>();
     private final ArrayList<String> action = new ArrayList<>();
     private final ArrayList<String> timeOfAction = new ArrayList<>();
+    private final ArrayList<String> attendanceAction = new ArrayList<>();
 
     private final ArrayList<String> listOfEndTime = new ArrayList<>();
     private final ArrayList<String> listOfAttendance = new ArrayList<>();
@@ -25,6 +26,22 @@ public class ReadCsvFromFile
         listOfEndTime.addAll(Arrays.asList("09:30:00", "11:10:00", "12:50:00", "14:50:00",
                 "16:30:00", "18:10:00", "19:50:00", "21:30:00"));
         return listOfEndTime;
+    }
+
+    /**
+     * Функция для получения максимального числа из списка строк
+     * со временем посещения
+     * @param arrayList - список со временем посещения
+     * @return - возвращает максимальное число из списка
+     */
+    private int toGetMaximum(ArrayList<String> arrayList) {
+        int maximum = 0;
+        for (String s : arrayList) {
+            if (toGetSecondsFromString(s) > maximum) {
+                maximum = toGetSecondsFromString(s);
+            }
+        }
+        return maximum;
     }
 
     /**
@@ -77,7 +94,7 @@ public class ReadCsvFromFile
      */
     private String toGetStringFromSeconds(int seconds) {
         int hours = (int) Math.floor(seconds/3600);
-        int minutes = (int)Math.floor((seconds - (hours * 3600))/60);
+        int minutes = (int) Math.floor((seconds - (hours * 3600))/60);
         int sec = seconds - (hours * 3600) - (minutes * 60);
         String min, strSec, hr, time;
         if (hours < 10)
@@ -102,7 +119,7 @@ public class ReadCsvFromFile
     /**
      * Функция считает количество строк в .csv
      * написана для ограничения в методе @toReadFullFile
-     * @param filename - путь к файлу (Не пустой)
+     * @param filename - путь к файлу
      * @return - количество строк в файле .csv
      * @throws IOException - отлавливаем ошибки во время операции ввода-вывода
      */
@@ -119,7 +136,7 @@ public class ReadCsvFromFile
     /**
      * Функция считает количество элементов в .csv файле
      * написана для ограничения в методе @finalGradeToArrayList
-     * @param filepath - путь к файлу (Не пустой)
+     * @param filepath - путь к файлу
      * @return - количество элементов в .csv строке
      * @throws IOException - отлавливаем ошибки во время операции ввода-вывода
      */
@@ -175,12 +192,12 @@ public class ReadCsvFromFile
                 String[] var = line.split(",");
 
                 //Каждый раз обнуляем строку, чтобы накапливать только сумму по строке
-                String strings = "";
-                for(int i=4; i < countOfElements(filepath); i++){
-                    strings = strings + var[i];
+                StringBuilder strings = new StringBuilder();
+                for(int i=4; i < countOfElements(filepath); i++) {
+                    strings.append(var[i]);
                 }
 
-                float finalGrade = (float) digitsToArray(strings)/(float)((countOfElements(filepath) - 3)/3);
+                float finalGrade = (float) digitsToArray(strings.toString())/(float)((countOfElements(filepath) - 3)/3);
                 //Записываем как отдельные элементы массива
                 //Имя   --  Фамилия --  Итоговая оценка
                 //И заменяем все " на пусто
@@ -196,86 +213,101 @@ public class ReadCsvFromFile
     /**
      * Функция расчета времени присутствия в собрании
      * @param filepath - путь к файлу
-     * @throws IOException - отлавливаем ошибки во время операции ввода-вывода
      */
     //ПЕРЕПИСАТЬ АДЕКВАТНО МЕТОД
-    public ArrayList<String> toReadFullFileTest(String filepath) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filepath), StandardCharsets.UTF_16));
-        //Используем для пропуска первой строки
-        line = br.readLine();
-        int i = 0;
-        int numberOfLines = countLines(filepath);
-        while ((line = br.readLine()) != null) {
-            String[] var = line.split("\t");
+    public ArrayList<String> toReadFullFileTest(String filepath) {
+        try(BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filepath), StandardCharsets.UTF_16))) {
+            //Используем для пропуска первой строки
+            line = br.readLine();
+            int i = 0;
+            int numberOfLines = countLines(filepath);
+            while ((line = br.readLine()) != null) {
+                String[] var = line.split("\t");
 
-            String[] strings = new String[numberOfLines];
-            String str = var[2];
-            strings[i] = str.replaceAll(".*[,]\\s","");
+                String[] strings = new String[numberOfLines];
+                String str = var[2];
+                strings[i] = str.replaceAll(".*[,]\\s" , "");
 
-            fullName.add(var[0]);
-            action.add(var[1]);
-            timeOfAction.add(strings[i]);
-
-            //System.out.println("Фамилия: " + var[0] +
-            //        " Действие: " + var[1] +
-            //        " Время выполнения действия: " + strings[i]
-            //);
-        }
-        String nearTimeToEnd = toGetNearTime(timeOfAction);
-
-        for(i = 0; i < fullName.size(); i++) {
-            for(int j = i + 1; j < fullName.size(); j++) {
-                if(action.get(i).equals("Присоединился") && action.get(j).equals("Ушел")) {
-                    int sec1 = toGetSecondsFromString(timeOfAction.get(i));
-                    int sec2 = toGetSecondsFromString(timeOfAction.get(j));
-                    int time = sec2 - sec1;
-                    String timeStr = toGetStringFromSeconds(time);
-
-                    fullName.remove(j);
-                    action.remove(j);
-                    timeOfAction.remove(j);
-
-                    timeOfAction.set(i , timeStr);
-                    break;
-                }
-                if(!fullName.get(i).equals(fullName.get(j))) {
-                    String diff = toGetStringFromSeconds(toGetSecondsFromString(nearTimeToEnd) - toGetSecondsFromString(timeOfAction.get(i)));
-                    timeOfAction.set(i, diff);
-                    break;
-                }
+                fullName.add(var[0]);
+                action.add(var[1]);
+                timeOfAction.add(strings[i]);
             }
-            if (fullName.get(i).equals(fullName.get(fullName.size()-1))) {
-                String diff = toGetStringFromSeconds(toGetSecondsFromString(nearTimeToEnd) - toGetSecondsFromString(timeOfAction.get(i)));
-                timeOfAction.set(i, diff);
-                break;
-            }
-            //System.out.println( lastName.get(i) + "\t" + action.get(i) + "\t" + timeOfAction.get(i));
-        }
-        for (i = 0; i < fullName.size(); i++) {
-            for(int j = i + 1; j < fullName.size(); j++) {
-                if (fullName.get(i).equals(fullName.get(j))) {
-                    if (action.get(i).equals("Присоединился") && action.get(j).equals("Присоединился")) {
-                        int sec11 = toGetSecondsFromString(timeOfAction.get(i));
-                        int sec22 = toGetSecondsFromString(timeOfAction.get(j));
-                        int time = sec22 + sec11;
+            String nearTimeToEnd = toGetNearTime(timeOfAction);
+
+            for (i = 0; i < fullName.size(); i++) {
+                for (int j = i + 1; j < fullName.size(); j++) {
+                    if (action.get(i).equals("Присоединился") && action.get(j).equals("Ушел")) {
+                        int sec1 = toGetSecondsFromString(timeOfAction.get(i));
+                        int sec2 = toGetSecondsFromString(timeOfAction.get(j));
+                        int time = sec2 - sec1;
                         String timeStr = toGetStringFromSeconds(time);
 
                         fullName.remove(j);
                         action.remove(j);
                         timeOfAction.remove(j);
 
-                        timeOfAction.set(i, timeStr);
+                        timeOfAction.set(i , timeStr);
+                        break;
+                    }
+                    if (!fullName.get(i).equals(fullName.get(j))) {
+                        String diff = toGetStringFromSeconds(toGetSecondsFromString(nearTimeToEnd) - toGetSecondsFromString(timeOfAction.get(i)));
+                        timeOfAction.set(i , diff);
                         break;
                     }
                 }
+                if (fullName.get(i).equals(fullName.get(fullName.size() - 1))) {
+                    String diff = toGetStringFromSeconds(toGetSecondsFromString(nearTimeToEnd) - toGetSecondsFromString(timeOfAction.get(i)));
+                    timeOfAction.set(i , diff);
+                    break;
+                }
             }
-            //System.out.println( fullName.get(i) + "\t" + action.get(i) + "\t" + timeOfAction.get(i));
-
-            ////Соединяем три ArrayList'a в один
             for (i = 0; i < fullName.size(); i++) {
+                for (int j = i + 1; j < fullName.size(); j++) {
+                    if (fullName.get(i).equals(fullName.get(j))) {
+                        if (action.get(i).equals("Присоединился") && action.get(j).equals("Присоединился")) {
+                            int sec11 = toGetSecondsFromString(timeOfAction.get(i));
+                            int sec22 = toGetSecondsFromString(timeOfAction.get(j));
+                            int time = sec22 + sec11;
+                            String timeStr = toGetStringFromSeconds(time);
+
+                            fullName.remove(j);
+                            action.remove(j);
+                            timeOfAction.remove(j);
+
+                            timeOfAction.set(i , timeStr);
+                            break;
+                        }
+                    }
+                }
+            }
+
+
+            //Цикл для заполнения списка с отметкой о посещении
+            //+ если присутствовал с разницей менее 15 минут от максимального времени
+            //- если пристуствовал с разницей более
+            for (i = 0; i < fullName.size(); i++) {
+                //Максимальное время
+                int maximum = toGetMaximum(timeOfAction);
+                //Время для сравнения
+                int minutesForCompare = toGetSecondsFromString("00:10:00");
+                //Время в текущем элементе списка
+                int timeOfCurrentElement = toGetSecondsFromString(timeOfAction.get(i));
+                //Разница между текущим элементом и максимумом
+                int difference = maximum - timeOfCurrentElement;
+                if (difference < minutesForCompare) {
+                    attendanceAction.add(i , "+");
+                } else
+                    attendanceAction.add(i , "-");
+            }
+
+            //Соединяем два ArrayList'a в один
+            for (i = 0; i < attendanceAction.size(); i++) {
                 listOfAttendance.add(fullName.get(i));
                 listOfAttendance.add(timeOfAction.get(i));
+                listOfAttendance.add(attendanceAction.get(i));
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return listOfAttendance;
     }
@@ -302,7 +334,7 @@ public class ReadCsvFromFile
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         ReadCsvFromFile readCsvFromFile = new ReadCsvFromFile();
         readCsvFromFile.toReadFullFileTest("D:/UVA 15.03.csv");
     }
